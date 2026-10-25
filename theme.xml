@@ -610,6 +610,7 @@ function drawLive(k){
   HAT_SPOTS.forEach(s=>{ if(s.k!==k||(P.hats||{})[s.id])return; const hi=AIMG["h-"+s.id+"-front"]; if(!hi)return;
     const w=TS*0.95, hh=hi.height*w/hi.width, px=s.x*TS+TS/2, py=s.y*TS+TS*0.55+bob;
     cx2.fillStyle="rgba(255,211,77,"+(0.15+0.3*pulse)+")";cx2.beginPath();cx2.arc(px,py,TS*0.6,0,7);cx2.fill(); cx2.drawImage(hi,px-w/2,py-hh/2,w,hh)});
+  drawRoamers(k);
   const walking=(steps%2===1)&&(Date.now()-lastStepAt<260);
   const list=[]; const om=oldManPos(); if(om&&om.k===k) list.push(["oldman",om.x,om.y,"front",false]);
   if(P.flags.metWanda&&P.wx!=null&&P.wk===k) list.push(["wanda",P.wx,P.wy,P.wdir||"front",walking]);
@@ -706,6 +707,7 @@ function tryMove(dx,dy){
   const om=oldManPos();
   if(om&&om.k===sx+","+sy&&om.x===nx&&om.y===ny){ oldManBattle(); return }
   const t=tileAt(sx,sy,nx,ny);
+  const rm=roamerAt(sx+","+sy,nx,ny); if(rm&&sx===P.sx&&sy===P.sy){ meetRoamer(rm); return }
   if(t==="G"&&!P.flags.freed){ gateEvent(); return }
   if(blocked(sx,sy,nx,ny))return;
   const pk=P.sx+","+P.sy; P.wdir=P.lastDir||P.dir; P.lastDir=P.dir; P.wx=P.x; P.wy=P.y; P.wk=pk;
@@ -726,7 +728,7 @@ function onStep(t){
   if(k==="1,2"&&!P.flags.metWanda){wandaEvent();return}
   if(graceSteps>0){graceSteps--;return}
   if(!P.flags.cardsAlive)return;
-  const chance = t==="*"?0.15:(t==="."?0.07:0);
+  const chance = t==="*"?0.08:(t==="."?0.03:0);
   if(chance&&Math.random()<chance) wildBattle();
 }
 const KEYS={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]};
@@ -841,13 +843,13 @@ let B=null, bTok=0;
 function mkMe(id){const t=cardStats(id);return {id,c:CARD_BY_ID[id],a:t[0],h:t[1],mh:t[1],u:t[2]}}
 function mkOp(id,bonus){const t=STATS[id];const b=bonus||0;return {id,c:CARD_BY_ID[id],a:t[0]+b,h:t[1]+b,mh:t[1]+b,u:t[2]}}
 function alive(side){return B[side].filter(x=>x.h>0)}
-function wildTeam(){
+function wildTeam(lead){
   const f=P.flags, commons=CARDS.filter(c=>c[2]==="common"&&!NIGHTMARES.includes(c[0])).map(c=>c[0]), rares=CARDS.filter(c=>c[2]==="rare"&&!NIGHTMARES.includes(c[0])).map(c=>c[0]);
   let n, pool;
   if(!f.hasKeys){n=Math.random()<0.5?1:2;pool=commons}
   else if(!f.power){n=Math.random()<0.5?2:3;pool=commons.concat(rares)}
   else {n=3;pool=commons.concat(rares,NIGHTMARES,NIGHTMARES)}
-  const d=[]; let guard=0; while(d.length<n&&guard++<100){const c=pickRand(pool); if(!d.includes(c))d.push(c)}
+  const d=lead?[lead]:[]; let guard=0; while(d.length<n&&guard++<100){const c=pickRand(pool); if(!d.includes(c))d.push(c)}
   return d.map(id=>mkOp(id,0));
 }
 function bgFor(kind){ if(kind==="cloey")return "ch5"; if(kind==="ngurp")return "ch6"; if(kind==="oldman")return "ch7"; return P.flags.power?"ch6":"ch3"; }
@@ -1014,8 +1016,55 @@ document.addEventListener("DOMContentLoaded",()=>{ const hud=$("#hud"); if(hud&&
 setInterval(()=>{ if(!P||$("#world").classList.contains("hide")||!$("#battle").classList.contains("hide")||!artReady)return;
   const k=P.sx+","+P.sy; if(ITEMS.some(it=>it.k===k&&!P.taken[it.id])||HAT_SPOTS.some(s=>s.k===k&&!(P.hats||{})[s.id])) draw(); },120);
 
+
+/* ================= MONSTERS YOU CAN SEE ON THE MAP ================= */
+// After the guitar song wakes the cards, each grassy screen gets 2 monster cards walking around.
+// They stay on the grass (paths are always safe). Wanderers stroll; chasers come after Louie when he is close.
+let ROAM={k:null,list:[]}, roamDefeated={};
+function roamPool(){ const f=P.flags, nm=NIGHTMARES;
+  const commons=CARDS.filter(c=>c[2]==="common"&&!nm.includes(c[0])).map(c=>c[0]), rares=CARDS.filter(c=>c[2]==="rare"&&!nm.includes(c[0])).map(c=>c[0]);
+  return !f.hasKeys?commons:(!f.power?commons.concat(rares):commons.concat(rares,nm)); }
+function roamOk(k,x,y){ const t=tileAt(+k.split(",")[0],+k.split(",")[1],x,y); return (t==="."||t==="*") && !ITEMS.some(i=>i.k===k&&i.x===x&&i.y===y&&!P.taken[i.id]) }
+function spawnRoamers(k){
+  ROAM={k,list:[]}; if(!P.flags.cardsAlive||k==="2,0"&&P.flags.gateOpen) return;
+  const pool=roamPool(), n=PLACES[k]&&PLACES[k].gate?1:2;
+  for(let i=0;i<n;i++){ for(let t=0;t<200;t++){ const x=1+Math.floor(Math.random()*14), y=1+Math.floor(Math.random()*10);
+      if(roamOk(k,x,y)&&Math.abs(x-P.x)+Math.abs(y-P.y)>5&&!ROAM.list.some(r=>r.x===x&&r.y===y)){
+        ROAM.list.push({id:k+"#"+i+"#"+Date.now(),card:pickRand(pool),x,y,chase:i===1||(P.flags.power&&Math.random()<0.5),next:Date.now()+800+Math.random()*800,seen:false}); break } } }
+}
+function roamerAt(k,x,y){ return ROAM.k===k?ROAM.list.find(r=>r.x===x&&r.y===y):null }
+function meetRoamer(r){ ROAM.list=ROAM.list.filter(x=>x!==r); sfx("battle"); startBattle("wild",wildTeam(r.card)) }
+function drawRoamers(k){
+  if(ROAM.k!==k) spawnRoamers(k);
+  const bob=Math.sin(Date.now()/220)*TS*0.05;
+  ROAM.list.forEach(r=>{ const im=CARD_IMG(r.card); const w=TS*1.05, h=TS*1.4, cx=r.x*TS+TS/2, bot=(r.y+1)*TS-TS*0.04+bob;
+    cx2.fillStyle="rgba(0,0,0,.35)";cx2.beginPath();cx2.ellipse(cx,(r.y+1)*TS-TS*0.06,TS*0.32,TS*0.1,0,0,7);cx2.fill();
+    cx2.fillStyle=r.chase?"#d9361e":"#f7f5ef"; rr(cx-w/2-3,bot-h-3,w+6,h+6,8,cx2.fillStyle);
+    if(im&&im.complete&&im.naturalWidth){ const s=Math.max(w/im.width,h/im.height), sw=w/s, sh=h/s; cx2.save(); cx2.beginPath(); cx2.roundRect?cx2.roundRect(cx-w/2,bot-h,w,h,6):cx2.rect(cx-w/2,bot-h,w,h); cx2.clip();
+      cx2.drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,cx-w/2,bot-h,w,h); cx2.restore(); }
+    if(r.seen){ cx2.fillStyle="#ffd34d"; cx2.font="900 "+Math.floor(TS*0.6)+"px sans-serif"; cx2.textAlign="center"; cx2.textBaseline="bottom"; cx2.fillText("!",cx,bot-h-4); }
+  });
+}
+const _cardImgs={}; function CARD_IMG(id){ if(!_cardImgs[id]){const i=new Image(); i.src=IMGS[id]; _cardImgs[id]=i} return _cardImgs[id] }
+function roamTick(){
+  if(!P||!artReady||$("#world").classList.contains("hide")||!$("#battle").classList.contains("hide")||!$("#menu").classList.contains("hide")||talking()) return;
+  const k=P.sx+","+P.sy; if(ROAM.k!==k) return; const now=Date.now(); let moved=false;
+  for(const r of ROAM.list){ if(now<r.next) continue;
+    const d=Math.abs(r.x-P.x)+Math.abs(r.y-P.y); r.seen=r.chase&&d<=4;
+    let opts=[[1,0],[-1,0],[0,1],[0,-1]];
+    if(r.seen){ opts.sort((a,b)=>(Math.abs(r.x+a[0]-P.x)+Math.abs(r.y+a[1]-P.y))-(Math.abs(r.x+b[0]-P.x)+Math.abs(r.y+b[1]-P.y))); }
+    else { opts.sort(()=>Math.random()-0.5); if(Math.random()<0.35){ r.next=now+700; continue } }
+    for(const [dx,dy] of opts){ const nx=r.x+dx, ny=r.y+dy;
+      if(nx===P.x&&ny===P.y){ meetRoamer(r); return }
+      if(roamOk(k,nx,ny)&&!ROAM.list.some(o=>o!==r&&o.x===nx&&o.y===ny)&&!(P.wk===k&&P.wx===nx&&P.wy===ny)){ r.x=nx; r.y=ny; moved=true; break } }
+    r.next=now+(r.seen?(P.flags.power?380:480):900+Math.random()*700);
+  }
+  if(moved) draw();
+}
+setInterval(roamTick,100);
+
 /* ================= TEST HOOKS ================= */
-window.__rpg={get P(){return P},get B(){return B},MAPS,ITEMS,PLACES,tryMove,startBattle,bossBattle,wildBattle,draw,doorEvent,
+window.__rpg={get ROAM(){return ROAM},get P(){return P},get B(){return B},MAPS,ITEMS,PLACES,tryMove,startBattle,bossBattle,wildBattle,draw,doorEvent,
   tele(sx,sy,x,y){P.sx=sx;P.sy=sy;P.x=x;P.y=y;P.visited[sx+","+sy]=1;draw()},winBattle(){if(B){B.op.forEach(o=>o.h=0);endBattle(true)}}};
 
 //]]></script>
