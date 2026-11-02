@@ -363,6 +363,40 @@ function mathQs(){
   return rows;
 }
 const QUESTION_SETS = [
+ {key:"sled", label:"2nd Grade Vocab: Sled Dogs Run", q:[
+["to become used to a place or thing", "adapt", "climate", "sense", "fresh"],
+["the weather in a place over a long time", "climate", "shadows", "freedom", "silence"],
+["wanting to do something", "eager", "fresh", "adapt", "sense"],
+["the ability to move or be free", "freedom", "silence", "eager", "climate"],
+["new: not spoiled", "fresh", "eager", "shadows", "adapt"],
+["a feeling", "sense", "silence", "freedom", "climate"],
+["dark areas made by blocking light", "shadows", "climate", "sense", "fresh"],
+["a lack of sound", "silence", "shadows", "eager", "freedom"]
+ ]},
+ {key:"sledsp", label:"2nd Grade Spelling: Sled Dogs Run (Listen and Pick)", mode:"listen", q:[
+["box", "box", "boks", "bocks", "baux"],
+["fox", "fox", "foks", "focks", "foxx"],
+["dog", "dog", "dogg", "dawg", "doog"],
+["lock", "lock", "lok", "loke", "lawk"],
+["pot", "pot", "pott", "paut", "pote"],
+["cone", "cone", "coan", "kone", "conn"],
+["home", "home", "hom", "hoam", "hoem"],
+["nose", "nose", "noze", "nos", "noes"],
+["poke", "poke", "poak", "pok", "pouk"],
+["rope", "rope", "roap", "rop", "roep"]
+ ]},
+ {key:"sledty", label:"2nd Grade Spelling: Sled Dogs Run (Listen and Type)", mode:"type", q:[
+["box", "box"],
+["fox", "fox"],
+["dog", "dog"],
+["lock", "lock"],
+["pot", "pot"],
+["cone", "cone"],
+["home", "home"],
+["nose", "nose"],
+["poke", "poke"],
+["rope", "rope"]
+ ]},
  {key:"beetles", label:"2nd Grade Vocab: Beetles", q:[
 ["to act in a certain way", "behave", "express", "flapping", "rhyme"],
 ["moving up and down", "flapping", "behave", "feathers", "rhythm"],
@@ -443,9 +477,9 @@ const QUESTION_SETS = [
  ]},
  {key:"math", label:"2nd Grade Math", gen:mathQs, q:mathQs()}
 ];
-// The picked set is remembered on this device. "beetles" (this week) is the default.
-// The storage name changed to "badmascots_qset3" so every device starts on this week once.
-let SET_KEY = (()=>{try{const k=localStorage.getItem("badmascots_qset3");if(QUESTION_SETS.some(x=>x.key===k))return k}catch(e){}return "beetles"})();
+// The picked set is remembered on this device. "sled" (this week) is the default.
+// The storage name changed to "badmascots_qset4" so every device starts on this week once.
+let SET_KEY = (()=>{try{const k=localStorage.getItem("badmascots_qset4");if(QUESTION_SETS.some(x=>x.key===k))return k}catch(e){}return "sled"})();
 function curSet(){return QUESTION_SETS.find(x=>x.key===SET_KEY)||QUESTION_SETS[0]}
 // Spelling sets: "listen" = hear the word and pick the spelling, "type" = hear the word and type it.
 function qMode(){return curSet().mode||""}
@@ -648,7 +682,7 @@ function setPicker(){
 }
 function wirePicker(){
   const sel=$("#qset"); if(!sel)return;
-  sel.onchange=()=>{SET_KEY=sel.value; try{localStorage.setItem("badmascots_qset3",SET_KEY)}catch(e){}
+  sel.onchange=()=>{SET_KEY=sel.value; try{localStorage.setItem("badmascots_qset4",SET_KEY)}catch(e){}
     WEEK_LABEL=curSet().label; QUESTIONS=curSet().q; BATTLE_QUESTIONS=QUESTIONS; run=null; renderPlay()};
 }
 function renderPlay(){
