@@ -363,6 +363,52 @@ function mathQs(){
   return rows;
 }
 const QUESTION_SETS = [
+ {key:"turtle", label:"2nd Grade Vocab: Turtle, Turtle, Watch Out!", q:[
+["covered up or hidden", "buried", "spies", "nature", "habitat"],
+["to get away", "escape", "nature", "journey", "peeks"],
+["the place where an animal lives", "habitat", "restless", "peeks", "journey"],
+["a long trip", "journey", "habitat", "spies", "peeks"],
+["the part of the world not made by people", "nature", "habitat", "peeks", "restless"],
+["looks quickly", "peeks", "restless", "habitat", "journey"],
+["always wanting to move", "restless", "peeks", "journey", "buried"],
+["catches sight of", "spies", "habitat", "buried", "nature"]
+ ]},
+ {key:"turtlesp", label:"2nd Grade Spelling: Turtle, Turtle, Watch Out! (Listen and Pick)", mode:"listen", q:[
+["place", "place", "plase", "plaice", "plac"],
+["barge", "barge", "barj", "barje", "bargge"],
+["trace", "trace", "trase", "trayce", "tras"],
+["ice", "ice", "ise", "iec", "ics"],
+["bulge", "bulge", "bulj", "bulje", "bulg"],
+["badge", "badge", "bage", "bajj", "badje"],
+["space", "space", "spase", "spaice", "spac"],
+["range", "range", "ranje", "raynge", "ranj"],
+["mice", "mice", "mise", "myce", "mic"],
+["cage", "cage", "caje", "kage", "caig"]
+ ]},
+ {key:"turtlety", label:"2nd Grade Spelling: Turtle, Turtle, Watch Out! (Listen and Type)", mode:"type", q:[
+["place", "place"],
+["barge", "barge"],
+["trace", "trace"],
+["ice", "ice"],
+["bulge", "bulge"],
+["badge", "badge"],
+["space", "space"],
+["range", "range"],
+["mice", "mice"],
+["cage", "cage"]
+ ]},
+ {key:"hippos", label:"2nd Grade Reading: Hippos at the Zoo", q:[
+["Where do Val and Mom go?", "the zoo", "the park", "school", "the beach"],
+["Why is Val at the zoo?", "She has homework.", "She wants a pet.", "She is lost.", "It is her birthday."],
+["How many facts does Val need?", "two", "one", "five", "ten"],
+["Is the zoo noisy or quiet?", "It is noisy.", "It is quiet.", "It is closed.", "It is empty."],
+["What does the hippos' pool look like?", "a river", "a bathtub", "a puddle", "a fountain"],
+["Who is Scott?", "He works at the zoo.", "He is Val's dad.", "He is Val's teacher.", "He is a kid at school."],
+["Hippos live in a ___ climate.", "hot", "cold", "snowy", "rainy"],
+["How does mud help the hippos?", "It keeps their skin cool.", "It helps them hide.", "It is their food.", "It helps them sleep."],
+["What do hippos do in the river instead of swimming?", "They walk.", "They fly.", "They dig.", "They float."],
+["How does Val feel at the end?", "happy", "sad", "scared", "mad"]
+ ]},
  {key:"sled", label:"2nd Grade Vocab: Sled Dogs Run", q:[
 ["to become used to a place or thing", "adapt", "climate", "sense", "fresh"],
 ["the weather in a place over a long time", "climate", "shadows", "freedom", "silence"],
@@ -489,9 +535,9 @@ const QUESTION_SETS = [
  ]},
  {key:"math", label:"2nd Grade Math", gen:mathQs, q:mathQs()}
 ];
-// The picked set is remembered on this device. "sled" (this week) is the default.
-// The storage name changed to "badmascots_qset4" so every device starts on this week once.
-let SET_KEY = (()=>{try{const k=localStorage.getItem("badmascots_qset4");if(QUESTION_SETS.some(x=>x.key===k))return k}catch(e){}return "sled"})();
+// The picked set is remembered on this device. "turtle" (this week) is the default.
+// The storage name changed to "badmascots_qset5" so every device starts on this week once.
+let SET_KEY = (()=>{try{const k=localStorage.getItem("badmascots_qset5");if(QUESTION_SETS.some(x=>x.key===k))return k}catch(e){}return "turtle"})();
 function curSet(){return QUESTION_SETS.find(x=>x.key===SET_KEY)||QUESTION_SETS[0]}
 // Spelling sets: "listen" = hear the word and pick the spelling, "type" = hear the word and type it.
 function qMode(){return curSet().mode||""}
@@ -700,7 +746,7 @@ function setPicker(){
 }
 function wirePicker(){
   const sel=$("#qset"); if(!sel)return;
-  sel.onchange=()=>{SET_KEY=sel.value; try{localStorage.setItem("badmascots_qset4",SET_KEY)}catch(e){}
+  sel.onchange=()=>{SET_KEY=sel.value; try{localStorage.setItem("badmascots_qset5",SET_KEY)}catch(e){}
     WEEK_LABEL=curSet().label; QUESTIONS=curSet().q; BATTLE_QUESTIONS=QUESTIONS; run=null; renderPlay()};
 }
 function renderPlay(){
