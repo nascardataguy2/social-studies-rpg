@@ -1288,7 +1288,9 @@ css.textContent =
 "#bm2o.on{display:block}"+
 "#bm2s{position:absolute;left:50%;top:50%;width:1280px;height:720px;overflow:hidden;transform-origin:center center;background:#000;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#ece6f5}"+
 "#bm2s canvas{position:absolute;left:0;top:0;width:1280px;height:720px;display:block}"+
-"#bm2leave{position:absolute;right:14px;top:10px;z-index:12;font:700 17px system-ui,sans-serif;padding:8px 16px;border-radius:10px;border:1px solid #6a5496;background:rgba(29,21,48,.92);color:#ece6f5;cursor:pointer}"+
+"#bm2btns{position:absolute;right:14px;top:10px;z-index:12;display:flex;gap:10px}"+
+"#bm2leave{font:700 17px system-ui,sans-serif;padding:8px 16px;border-radius:10px;border:1px solid #6a5496;background:rgba(29,21,48,.92);color:#ece6f5;cursor:pointer}"+
+"#bm2snd{font:700 17px system-ui,sans-serif;padding:8px 14px;border-radius:10px;border:1px solid #6a5496;background:rgba(29,21,48,.92);color:#ece6f5;cursor:pointer}"+
 "#bm2leave.arm{background:#5a1712;border-color:#f27d70;color:#ffd0ca}"+
 "#bm2panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;display:none;width:760px;background:rgba(20,14,32,.96);border:3px solid #e07a1f;border-radius:20px;padding:22px 28px;box-shadow:0 0 40px rgba(224,122,31,.45);align-items:center;gap:26px}"+
 "#bm2panel.on{display:flex}"+
@@ -1324,7 +1326,7 @@ document.head.appendChild(css);
 
 const ov = document.createElement("div"); ov.id = "bm2o";
 ov.innerHTML = '<div id="bm2s"><canvas id="bm2c" width="1280" height="720"></canvas>'+
-  '<button id="bm2leave" type="button">Leave</button>'+
+  '<div id="bm2btns"><button id="bm2snd" type="button"></button><button id="bm2leave" type="button">Leave</button></div>'+
   '<div id="bm2joy"><i></i></div><div id="bm2look">Drag here to look around</div>'+
   '<div id="bm2panel"><div class="pc" id="bm2pc"></div><div class="pt"><h3 id="bm2ph"></h3><div class="pn" id="bm2pn"></div><div class="ph" id="bm2pk"></div></div></div>'+
   '<div id="bm2scare"><img id="bm2man" alt=""><div id="bm2smsg">THE OLD MAN CAUGHT YOU<small>You start over from the beginning. Tap or press SPACE.</small></div></div>'+
@@ -1678,7 +1680,7 @@ function revealCard(c, had, after){
   setTimeout(()=>{const m=$("#mClose"); if(m) m.disabled=false},2800);
 }
 function scare(){
-  R.phase = "scare"; R.scares++; stopMoving();
+  R.phase = "scare"; R.scares++; stopMoving(); musicStop();
   const el = g("bm2scare"), msg = g("bm2smsg");
   msg.style.display = "none"; el.classList.remove("hit","flash"); el.classList.add("on");
   void el.offsetWidth; el.classList.add("hit","flash");
@@ -1691,7 +1693,7 @@ function resume(){
     g("bm2panel").classList.remove("on"); R.phase = "play";
     if(R.got >= 10) win();
   } else if(R.phase === "scare" && performance.now() >= R.scareReady){
-    g("bm2scare").classList.remove("on","hit"); resetRun(); R.phase = "play";
+    g("bm2scare").classList.remove("on","hit"); resetRun(); R.phase = "play"; musicStart();
   }
 }
 function win(){
@@ -1708,6 +1710,53 @@ g("bm2open").onclick = ()=>{
   next();
 };
 
+/* ---------- music: 8-bit haunted arcade tune, made by the browser ---------- */
+const MUS = { ac:null, out:null, timer:null, next:0, step:0, on:false };
+let muted = false; try{ muted = localStorage.getItem("bm2_mute") === "1"; }catch(e){}
+const mtof = m=>440*Math.pow(2,(m-69)/12);
+function mnote(t,m,dur,o){
+  const c=MUS.ac, g=c.createGain(), f=c.createBiquadFilter();
+  f.type="lowpass"; f.frequency.value=o.cut||5000;
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(o.vol,t+(o.att||0.003)); g.gain.exponentialRampToValueAtTime(0.0001,t+dur+(o.rel||0.03));
+  f.connect(g); g.connect(MUS.out);
+  const s=c.createOscillator(); s.type=o.wave; s.frequency.value=mtof(m);
+  if(o.vib){ const l=c.createOscillator(), lg=c.createGain(); l.frequency.value=o.vib; lg.gain.value=10; l.connect(lg); lg.connect(s.detune); l.start(t); l.stop(t+dur+0.2); }
+  s.connect(f); s.start(t); s.stop(t+dur+(o.rel||0.03)+0.05);
+}
+const CHORDS=[[57,60,64],[53,57,60],[50,53,57],[52,56,59]];
+const MEL=[69,null,null,72,null,71,null,69, 68,null,null,null,64,null,null,null, 65,null,null,69,null,68,null,65, 64,null,null,null,null,null,null,null];
+function mtick(){
+  const b=60/132/2;
+  while(MUS.next < MUS.ac.currentTime+0.25){
+    const t=MUS.next, i=MUS.step, c=CHORDS[Math.floor(i/16)%4];
+    mnote(t,c[i%3]+12,b*0.45,{wave:"square",vol:0.08,rel:0.02});
+    if(i%4===0) mnote(t,c[0]-12,b*1.8,{wave:"triangle",vol:0.16,att:0.005});
+    const m=MEL[Math.floor(i/2)%32]; if(m && i%2===0) mnote(t,m+12,b*1.6,{wave:"square",vol:0.075,cut:3500,vib:6,rel:0.04});
+    MUS.step++; MUS.next+=b;
+  }
+}
+function musicStart(){
+  if(muted || MUS.on) return;
+  try{
+    if(!MUS.ac) MUS.ac = new (window.AudioContext||window.webkitAudioContext)();
+    if(MUS.ac.state==="suspended") MUS.ac.resume();
+    const c=MUS.ac; MUS.out=c.createGain(); MUS.out.gain.value=0.0001; MUS.out.gain.exponentialRampToValueAtTime(0.8,c.currentTime+0.5); MUS.out.connect(c.destination);
+    MUS.on=true; MUS.step=0; MUS.next=c.currentTime+0.1; mtick(); MUS.timer=setInterval(mtick,60);
+  }catch(e){ MUS.on=false; }
+}
+function musicStop(){
+  clearInterval(MUS.timer); MUS.timer=null;
+  if(MUS.on && MUS.out){ const o=MUS.out, c=MUS.ac; try{ o.gain.cancelScheduledValues(c.currentTime); o.gain.setValueAtTime(Math.max(0.0001,o.gain.value),c.currentTime); o.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.3); }catch(e){} setTimeout(()=>{ try{o.disconnect()}catch(e){} },500); }
+  MUS.on=false; MUS.out=null;
+}
+function sndLabel(){ g("bm2snd").textContent = muted ? "Sound: Off" : "Sound: On"; }
+g("bm2snd").onclick = e=>{
+  e.stopPropagation(); muted = !muted;
+  try{ localStorage.setItem("bm2_mute", muted ? "1" : "0"); }catch(err){}
+  sndLabel(); if(muted) musicStop(); else if(R.phase!=="scare") musicStart();
+};
+sndLabel();
+
 /* ---------- open / close ---------- */
 let isTouch = false;
 function openMaze(){
@@ -1716,12 +1765,12 @@ function openMaze(){
   open = true; ov.classList.add("on"); fit(); document.body.style.overflow = "hidden";
   ["bm2panel","bm2win","bm2scare"].forEach(id=>g(id).classList.remove("on","hit"));
   g("bm2leave").classList.remove("arm"); g("bm2leave").textContent = "Leave"; R.leaveArm = false;
-  stopMoving(); R.phase = "play";
+  stopMoving(); R.phase = "play"; sndLabel(); musicStart();
   last = performance.now(); cancelAnimationFrame(rafId); rafId = requestAnimationFrame(frame);
 }
 function closeMaze(){
   open = false; R.phase = "off"; ov.classList.remove("on"); document.body.style.overflow = "";
-  cancelAnimationFrame(rafId); stopMoving();
+  cancelAnimationFrame(rafId); stopMoving(); musicStop();
   if(document.exitPointerLock) try{ document.exitPointerLock(); }catch(e){}
 }
 g("bm2leave").onclick = e=>{
@@ -1798,13 +1847,14 @@ function renderBM2(justWon){
     '<ul class="rules"><li>Computer: walk with <b>W A S D</b> or the <b>arrow keys</b>. Click the game to look around with the mouse.</li>'+
     '<li>iPad: walk with the joystick in the bottom left corner. Drag anywhere else to look around.</li>'+
     '<li>Lit halls are safe. In dark halls the Old Man can catch you, and the longer you stay in the dark the more likely he is. If he catches you, you start over.</li>'+
+    '<li>The music can be turned on or off with the Sound button in the top corner. The game works the same with the sound off.</li>'+
     '<li>Max\'s cards are just for this game. They do not go in your collection, but the packs you win do.</li></ul>'+
     '<div style="margin-top:14px"><button class="btn" id="bm2go" '+(READY?'':'disabled')+'>'+(READY?'Enter the park':'Loading…')+'</button></div></div>';
   const b = $("#bm2go");
   b.onclick = ()=>openMaze();
   if(!READY) loadAll().then(()=>{ const x = $("#bm2go"); if(x){ x.disabled = false; x.textContent = "Enter the park"; } });
 }
-return { render: renderBM2, open: openMaze, close: closeMaze, load: loadAll, get R(){return R}, get P(){return P}, get PICKS(){return PICKS}, get PACK(){return PACK}, get MAP(){return MAP}, get LIT(){return LIT}, scare, win, N };
+return { render: renderBM2, open: openMaze, close: closeMaze, load: loadAll, get R(){return R}, get P(){return P}, get PICKS(){return PICKS}, get PACK(){return PACK}, get MAP(){return MAP}, get LIT(){return LIT}, scare, win, N, get MUS(){return MUS} };
 })();
 function renderBM2(){ BM2.load(); BM2.render(); }
 
