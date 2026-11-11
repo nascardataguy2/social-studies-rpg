@@ -2241,6 +2241,7 @@ function frame(now){
 /* ---------- the tab ---------- */
 function renderBM2(justWon){
   const el = $("#tab-bm2");
+  try{ if(/[?&]unlock=level2(&|$)/.test(location.search)) localStorage.setItem("bm2_l2", "1"); }catch(e){}   // secret test link: ?unlock=level2
   let l2Open = false; try{ l2Open = localStorage.getItem("bm2_l2") === "1"; }catch(e){}
   el.innerHTML = '<div class="panel"><div class="bm2hero"><img alt="The Old Man" src="'+ART.oldman+'"><div class="tx">'+
     '<h2>Bad Mascots 2: The Abandoned Park</h2><h3 style="margin:4px 0 8px">Level 1: Max\'s Missing Cards</h3>'+
