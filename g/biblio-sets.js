@@ -1,0 +1,46 @@
+ {key:"biblio", label:"2nd Grade Vocab: Biblioburro", q:[
+["from one side to the other", "across", "ideas", "solution", "countryside"],
+["to take and return later", "borrow", "villages", "solution", "ideas"],
+["the land outside of the cities and towns", "countryside", "lonely", "borrow", "solution"],
+["thoughts", "ideas", "solution", "insists", "countryside"],
+["to demand", "insists", "countryside", "villages", "borrow"],
+["far away from places", "lonely", "borrow", "across", "insists"],
+["the answer to a problem", "solution", "lonely", "insists", "ideas"],
+["small groups of houses", "villages", "borrow", "insists", "across"]
+ ]},
+ {key:"bibliosp", label:"2nd Grade Spelling: Biblioburro (Listen and Pick)", mode:"listen", q:[
+["told", "told", "tolld", "toled", "toald"],
+["most", "most", "moast", "mowst", "mosst"],
+["float", "float", "flote", "flowt", "floatt"],
+["coat", "coat", "cote", "coate", "kote"],
+["toast", "toast", "tost", "toste", "towst"],
+["grow", "grow", "groe", "gro", "growe"],
+["mow", "mow", "moe", "mo", "mowe"],
+["show", "show", "sho", "showe", "shoa"],
+["Joe", "Joe", "Joa", "Jow", "Joh"],
+["toe", "toe", "toa", "tohe", "tooe"]
+ ]},
+ {key:"bibliotyp", label:"2nd Grade Spelling: Biblioburro (Listen and Type)", mode:"type", q:[
+["told", "told"],
+["most", "most"],
+["float", "float"],
+["coat", "coat"],
+["toast", "toast"],
+["grow", "grow"],
+["mow", "mow"],
+["show", "show"],
+["Joe", "Joe"],
+["toe", "toe"]
+ ]},
+ {key:"sunset", label:"2nd Grade Reading: A Special Sunset", q:[
+["Who took Maria and her dad to the airport?", "a neighbor", "her mom", "a taxi driver", "her teacher"],
+["How did Maria feel about flying?", "delighted", "scared", "bored", "mad"],
+["What was wrong with their plane at first?", "It was late.", "It was broken.", "It was full.", "It was too small."],
+["Where did Maria sit?", "next to the window", "in the back", "next to the door", "up front with the pilot"],
+["What was the sun doing?", "It was setting.", "It was rising.", "It was gone.", "It was behind a storm."],
+["What did they fly over?", "trees, houses, and lakes", "mountains and snow", "the ocean", "a big city"],
+["What strange thing did Maria notice?", "The sunset did not move.", "The plane went backward.", "It started to snow.", "The moon turned green."],
+["Why did the sunset seem to follow them?", "The sun is very far away.", "The plane was too slow.", "The sun was following Maria.", "The window was dirty."],
+["What time was it after the sun set?", "nighttime", "morning", "lunchtime", "noon"],
+["Why would the moon follow them too?", "It was far away.", "It was close by.", "It was very small.", "It was hot."]
+ ]},
